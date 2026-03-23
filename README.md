@@ -1,8 +1,8 @@
 # MiniGram — minigram.net
 
-AI-powered Telegram Mini App generator. Describe your app — Claude generates a complete, production-ready package in ~45 seconds.
+AI-powered Telegram Mini App generator. Describe your app — AI generates a complete, production-ready package in ~45 seconds.
 
-**Stack:** Next.js 14 · Supabase · Claude Sonnet 4 · Tailwind CSS · Vercel
+**Stack:** Next.js 14 · Supabase · Tailwind CSS · Vercel
 
 ---
 
