@@ -1,0 +1,1191 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniGram — Build Telegram Mini Apps with AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,300&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06090f;
+  --bg2:#0c1018;
+  --bg3:#111622;
+  --surface:#141924;
+  --surface2:#1a2130;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.1);
+  --tg:#229ED9;
+  --tg2:#1a7db5;
+  --tg-glow:rgba(34,158,217,0.18);
+  --tg-pale:rgba(34,158,217,0.07);
+  --ton:#0098EA;
+  --ton-glow:rgba(0,152,234,0.15);
+  --gold:#F4A733;
+  --gold-glow:rgba(244,167,51,0.12);
+  --green:#1DB954;
+  --text:#EEF2F8;
+  --text2:#8A95A8;
+  --text3:#4A5568;
+  --mono:'DM Mono',monospace;
+  --sans:'Inter',sans-serif;
+  --display:'Inter',sans-serif;
+}
+
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.4;
+}
+
+/* ── LAYOUT ── */
+.container{max-width:1140px;margin:0 auto;padding:0 2rem;position:relative;z-index:1}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:0;
+  transition:all 0.3s;
+}
+nav.scrolled{
+  background:rgba(6,9,15,0.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  max-width:1140px;margin:0 auto;padding:1.25rem 2rem;
+}
+.logo{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--display);font-size:1.25rem;font-weight:700;
+  letter-spacing:-0.02em;color:var(--text);text-decoration:none;
+}
+.logo-mark{
+  width:34px;height:34px;background:var(--tg);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;font-weight:800;color:#fff;font-family:var(--display);
+  box-shadow:0 0 20px var(--tg-glow);
+}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{
+  font-size:0.875rem;color:var(--text2);text-decoration:none;
+  font-weight:400;transition:color 0.2s;letter-spacing:0.01em;
+}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{
+  background:var(--tg);color:#fff;border:none;border-radius:8px;
+  padding:0.6rem 1.25rem;font-family:var(--sans);font-size:0.875rem;
+  font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.nav-cta:hover{background:var(--tg2);transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;align-items:center;
+  padding:6rem 0 4rem;position:relative;overflow:hidden;
+}
+/* Background grid */
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(34,158,217,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,158,217,0.04) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 40%,transparent 100%);
+}
+/* Glow orbs */
+.hero::after{
+  content:'';position:absolute;
+  width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(34,158,217,0.08) 0%,transparent 70%);
+  top:-200px;left:50%;transform:translateX(-50%);
+  pointer-events:none;
+}
+.glow-orb{
+  position:absolute;border-radius:50%;pointer-events:none;
+}
+.glow-orb-1{
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(0,152,234,0.06) 0%,transparent 70%);
+  bottom:-100px;right:-100px;
+}
+.glow-orb-2{
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(244,167,51,0.04) 0%,transparent 70%);
+  top:20%;left:-150px;
+}
+.hero-content{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4rem;align-items:center;
+  width:100%;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(34,158,217,0.08);border:1px solid rgba(34,158,217,0.2);
+  border-radius:100px;padding:5px 14px;
+  font-family:var(--mono);font-size:0.72rem;color:var(--tg);
+  letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1.5rem;
+}
+.eyebrow-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--tg);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+h1{
+  font-family:var(--display);
+  font-size:clamp(2.8rem,5.5vw,4.2rem);
+  font-weight:800;line-height:1.05;
+  letter-spacing:-0.04em;
+  margin-bottom:1.5rem;
+}
+.h1-line2{
+  background:linear-gradient(135deg,var(--tg) 0%,#5bc8f5 50%,var(--ton) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{
+  font-size:1.1rem;color:var(--text2);line-height:1.75;
+  margin-bottom:2.5rem;font-weight:300;max-width:480px;
+}
+.hero-sub strong{color:var(--text);font-weight:500}
+.hero-actions{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--tg);color:#fff;text-decoration:none;
+  padding:0.875rem 1.75rem;border-radius:10px;
+  font-size:1rem;font-weight:500;font-family:var(--sans);
+  transition:all 0.25s;border:none;cursor:pointer;
+  box-shadow:0 0 30px rgba(34,158,217,0.3);
+}
+.btn-primary:hover{
+  background:var(--tg2);transform:translateY(-2px);
+  box-shadow:0 0 40px rgba(34,158,217,0.5);
+}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:8px;
+  color:var(--text2);text-decoration:none;
+  padding:0.875rem 1.5rem;border-radius:10px;
+  font-size:1rem;font-weight:400;
+  transition:all 0.2s;border:1px solid var(--border2);
+  background:transparent;cursor:pointer;font-family:var(--sans);
+}
+.btn-secondary:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+.hero-stats{
+  display:flex;gap:2rem;margin-top:3rem;padding-top:2rem;
+  border-top:1px solid var(--border);
+}
+.stat-item{display:flex;flex-direction:column;gap:3px}
+.stat-num{font-family:var(--display);font-size:1.5rem;font-weight:700;color:var(--text)}
+.stat-label{font-size:0.75rem;color:var(--text3);font-family:var(--mono);letter-spacing:0.05em}
+
+/* ── HERO VISUAL ── */
+.hero-visual{position:relative}
+.terminal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:14px;overflow:hidden;
+  box-shadow:0 40px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.04);
+}
+.terminal-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:0.875rem 1.25rem;background:var(--surface2);
+  border-bottom:1px solid var(--border);
+}
+.tb-dot{width:11px;height:11px;border-radius:50%}
+.tb-red{background:#FF5F57}.tb-amber{background:#FFBD2E}.tb-green{background:#28C840}
+.tb-title{
+  font-family:var(--mono);font-size:0.72rem;color:var(--text3);
+  margin-left:auto;margin-right:auto;letter-spacing:0.05em;
+}
+.terminal-body{padding:1.5rem;font-family:var(--mono);font-size:0.8rem;line-height:1.8}
+.t-prompt{color:var(--text3)}
+.t-input{color:var(--text2)}
+.t-cursor{
+  display:inline-block;width:8px;height:14px;background:var(--tg);
+  vertical-align:middle;margin-left:2px;animation:blink 1s step-end infinite;
+}
+@keyframes blink{50%{opacity:0}}
+.t-generating{margin-top:1rem}
+.t-step{
+  display:flex;align-items:center;gap:10px;
+  padding:4px 0;color:var(--text3);font-size:0.75rem;
+}
+.t-step.done{color:var(--green)}
+.t-step.active{color:var(--tg)}
+.t-step.pending{color:var(--text3);opacity:0.4}
+.t-icon{font-size:0.8rem;width:16px;text-align:center}
+.t-files{
+  margin-top:1.25rem;padding:1rem;
+  background:rgba(34,158,217,0.05);border:1px solid rgba(34,158,217,0.1);
+  border-radius:8px;
+}
+.t-files-title{font-size:0.68rem;color:var(--tg);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem}
+.t-file{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:3px 0;font-size:0.74rem;
+}
+.t-filename{color:var(--text)}
+.t-filesize{color:var(--text3)}
+.t-badge{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:0.65rem;font-family:var(--mono);font-weight:500;
+}
+.badge-t1{background:rgba(34,158,217,0.12);color:var(--tg)}
+.badge-t2{background:rgba(0,152,234,0.12);color:var(--ton)}
+.badge-pass{background:rgba(29,185,84,0.12);color:var(--green)}
+
+/* Floating cards */
+.float-card{
+  position:absolute;background:var(--surface);
+  border:1px solid var(--border2);border-radius:10px;
+  padding:0.75rem 1rem;box-shadow:0 20px 40px rgba(0,0,0,0.4);
+  font-size:0.78rem;
+}
+.float-card-1{
+  top:-20px;right:-30px;
+  animation:float1 4s ease-in-out infinite;
+}
+.float-card-2{
+  bottom:-10px;left:-30px;
+  animation:float2 5s ease-in-out infinite;
+}
+@keyframes float1{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes float2{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.fc-label{font-size:0.65rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.fc-value{font-weight:600;color:var(--text);font-family:var(--display)}
+.fc-sub{font-size:0.7rem;color:var(--green)}
+
+/* ── SECTION COMMONS ── */
+section{padding:6rem 0;position:relative;z-index:1}
+.section-label{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:0.7rem;color:var(--tg);
+  letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1rem;
+}
+.section-label::before{content:'';display:block;width:20px;height:1px;background:var(--tg)}
+h2{
+  font-family:var(--display);font-size:clamp(2rem,3.5vw,2.8rem);
+  font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:1rem;
+}
+.section-sub{font-size:1.05rem;color:var(--text2);line-height:1.75;max-width:560px;font-weight:300}
+
+/* ── HOW IT WORKS ── */
+.how-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:1.5rem;margin-top:4rem;
+}
+.how-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:2rem;position:relative;
+  transition:all 0.3s;overflow:hidden;
+}
+.how-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--tg-pale) 0%,transparent 60%);
+  opacity:0;transition:opacity 0.3s;
+}
+.how-card:hover{border-color:rgba(34,158,217,0.25);transform:translateY(-4px)}
+.how-card:hover::before{opacity:1}
+.how-num{
+  font-family:var(--display);font-size:3rem;font-weight:800;
+  color:rgba(34,158,217,0.12);line-height:1;margin-bottom:1.25rem;
+  letter-spacing:-0.04em;
+}
+.how-icon{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:1.25rem;font-size:1.3rem;
+}
+.how-icon-tg{background:rgba(34,158,217,0.12)}
+.how-icon-ai{background:rgba(244,167,51,0.12)}
+.how-icon-dep{background:rgba(29,185,84,0.12)}
+.how-card h3{
+  font-family:var(--display);font-size:1.1rem;font-weight:600;
+  margin-bottom:0.75rem;letter-spacing:-0.01em;
+}
+.how-card p{font-size:0.9rem;color:var(--text2);line-height:1.7}
+.how-connector{
+  position:absolute;top:50%;right:-13px;
+  width:26px;height:2px;background:linear-gradient(90deg,var(--border2),var(--tg));
+  z-index:2;
+}
+
+/* ── TRACKS ── */
+.tracks-section{background:var(--bg2)}
+.tracks-section::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--tg),transparent);
+}
+.tracks-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:3.5rem}
+.track-card{
+  border-radius:16px;padding:2.5rem;
+  border:1px solid var(--border);position:relative;overflow:hidden;
+}
+.track-card-t1{background:linear-gradient(135deg,rgba(34,158,217,0.05) 0%,transparent 60%)}
+.track-card-t2{background:linear-gradient(135deg,rgba(0,152,234,0.05) 0%,transparent 60%)}
+.track-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--border-glow,var(--tg)),transparent);
+}
+.track-card-t1{--border-glow:var(--tg)}
+.track-card-t2{--border-glow:var(--ton)}
+.track-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:100px;
+  font-family:var(--mono);font-size:0.7rem;font-weight:500;
+  margin-bottom:1.5rem;
+}
+.badge-standard{background:rgba(34,158,217,0.1);color:var(--tg);border:1px solid rgba(34,158,217,0.2)}
+.badge-web3{background:rgba(0,152,234,0.1);color:var(--ton);border:1px solid rgba(0,152,234,0.2)}
+.track-card h3{font-family:var(--display);font-size:1.4rem;font-weight:700;margin-bottom:0.75rem;letter-spacing:-0.02em}
+.track-card p{font-size:0.9rem;color:var(--text2);line-height:1.7;margin-bottom:1.75rem}
+.track-features{display:flex;flex-direction:column;gap:0.625rem}
+.track-feat{
+  display:flex;align-items:center;gap:10px;
+  font-size:0.875rem;color:var(--text2);
+}
+.track-feat::before{
+  content:'';display:block;width:6px;height:6px;border-radius:50%;
+  background:var(--feat-col,var(--tg));flex-shrink:0;
+}
+.track-card-t2 .track-feat::before{--feat-col:var(--ton)}
+.track-output{
+  margin-top:2rem;padding:1.25rem;
+  background:rgba(0,0,0,0.3);border-radius:10px;border:1px solid var(--border);
+}
+.track-output-label{
+  font-family:var(--mono);font-size:0.65rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;
+}
+.file-pills{display:flex;flex-wrap:wrap;gap:6px}
+.file-pill{
+  padding:3px 10px;border-radius:5px;
+  font-family:var(--mono);font-size:0.7rem;
+  background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+}
+.file-pill.special{background:rgba(34,158,217,0.08);border-color:rgba(34,158,217,0.2);color:var(--tg)}
+.track-card-t2 .file-pill.special{background:rgba(0,152,234,0.08);border-color:rgba(0,152,234,0.2);color:var(--ton)}
+
+/* ── COMPLIANCE ── */
+.compliance-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1rem;margin-top:3.5rem;
+}
+.compliance-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:1.5rem;
+  transition:all 0.25s;
+}
+.compliance-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.compliance-num{
+  font-family:var(--mono);font-size:0.65rem;color:var(--tg);
+  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.875rem;
+}
+.compliance-card h4{font-family:var(--display);font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;letter-spacing:-0.01em}
+.compliance-card p{font-size:0.82rem;color:var(--text2);line-height:1.6}
+.compliance-check{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:0.875rem;font-family:var(--mono);font-size:0.68rem;color:var(--green);
+}
+
+/* ── CODE PREVIEW ── */
+.code-section{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+.code-tabs{
+  display:flex;gap:4px;margin-top:3.5rem;margin-bottom:0;
+  border-bottom:1px solid var(--border);padding-bottom:0;
+}
+.code-tab{
+  padding:0.625rem 1.25rem;font-family:var(--mono);font-size:0.78rem;
+  color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all 0.2s;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;
+}
+.code-tab.active{color:var(--tg);border-bottom-color:var(--tg)}
+.code-tab:hover:not(.active){color:var(--text2)}
+.code-window{
+  background:var(--surface);border:1px solid var(--border);
+  border-top:none;border-radius:0 0 14px 14px;overflow:hidden;
+}
+.code-window-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.75rem 1.25rem;background:var(--surface2);border-bottom:1px solid var(--border);
+}
+.code-window-lang{font-family:var(--mono);font-size:0.7rem;color:var(--text3)}
+.code-copy{
+  font-family:var(--mono);font-size:0.68rem;color:var(--text3);
+  background:none;border:1px solid var(--border);border-radius:4px;
+  padding:3px 10px;cursor:pointer;transition:all 0.15s;
+}
+.code-copy:hover{color:var(--text);border-color:var(--border2)}
+.code-content{padding:1.5rem;font-family:var(--mono);font-size:0.8rem;line-height:1.8;overflow-x:auto}
+.code-hidden{display:none}
+/* Syntax */
+.kw{color:#F472B6}.fn{color:#60A5FA}.str{color:#86EFAC}
+.cm{color:#4A5568;font-style:italic}.num{color:#FBBF24}.op{color:#94A3B8}
+.cls{color:#FCD34D}
+
+/* ── STANDARDS SECTION ── */
+.standards-row{
+  display:flex;align-items:stretch;gap:0;
+  margin-top:3.5rem;border-radius:16px;overflow:hidden;
+  border:1px solid var(--border);
+}
+.standard-item{
+  flex:1;padding:2rem 1.5rem;border-right:1px solid var(--border);
+  background:var(--surface);transition:background 0.2s;
+}
+.standard-item:last-child{border-right:none}
+.standard-item:hover{background:var(--surface2)}
+.std-num{
+  font-family:var(--display);font-size:0.75rem;font-weight:700;
+  color:var(--tg);margin-bottom:0.75rem;letter-spacing:0.05em;
+}
+.standard-item h4{font-family:var(--display);font-size:0.95rem;font-weight:600;margin-bottom:0.5rem}
+.standard-item p{font-size:0.8rem;color:var(--text2);line-height:1.6}
+
+/* ── DEPLOYMENT ── */
+.deploy-flow{
+  display:flex;align-items:stretch;gap:0;
+  margin-top:3.5rem;
+}
+.deploy-step{
+  flex:1;padding:1.75rem 1.5rem;background:var(--surface);
+  border:1px solid var(--border);position:relative;
+}
+.deploy-step:first-child{border-radius:12px 0 0 12px}
+.deploy-step:last-child{border-radius:0 12px 12px 0}
+.deploy-step:not(:last-child)::after{
+  content:'→';position:absolute;right:-14px;top:50%;
+  transform:translateY(-50%);z-index:3;
+  font-size:1rem;color:var(--tg);
+  width:28px;text-align:center;
+}
+.deploy-step-num{
+  font-family:var(--mono);font-size:0.65rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;
+}
+.deploy-step h4{font-family:var(--display);font-size:0.9rem;font-weight:600;margin-bottom:0.4rem}
+.deploy-step p{font-size:0.8rem;color:var(--text2);line-height:1.6}
+.deploy-step .auto-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:0.875rem;font-family:var(--mono);font-size:0.65rem;
+  color:var(--green);background:rgba(29,185,84,0.08);
+  border:1px solid rgba(29,185,84,0.15);border-radius:100px;padding:2px 8px;
+}
+
+/* ── PRICING ── */
+.pricing-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:1.5rem;margin-top:3.5rem;align-items:start;
+}
+.pricing-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:2.5rem;position:relative;overflow:hidden;
+}
+.pricing-card.featured{
+  background:linear-gradient(135deg,rgba(34,158,217,0.08) 0%,var(--surface) 50%);
+  border-color:rgba(34,158,217,0.3);
+}
+.pricing-card.featured::before{
+  content:'MOST POPULAR';
+  position:absolute;top:1.25rem;right:1.25rem;
+  font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;
+  color:var(--tg);background:rgba(34,158,217,0.1);
+  border:1px solid rgba(34,158,217,0.2);border-radius:100px;
+  padding:3px 10px;
+}
+.pricing-tier{
+  font-family:var(--mono);font-size:0.7rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem;
+}
+.pricing-price{
+  font-family:var(--display);font-size:2.75rem;font-weight:800;
+  letter-spacing:-0.04em;line-height:1;margin-bottom:0.25rem;
+}
+.pricing-price span{font-size:1rem;font-weight:400;color:var(--text2)}
+.pricing-desc{font-size:0.875rem;color:var(--text2);margin-bottom:2rem;line-height:1.6}
+.pricing-btn{
+  display:block;text-align:center;padding:0.75rem;border-radius:8px;
+  font-size:0.9rem;font-weight:500;text-decoration:none;
+  transition:all 0.2s;margin-bottom:2rem;cursor:pointer;border:none;
+  font-family:var(--sans);width:100%;
+}
+.pricing-btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.pricing-btn-outline:hover{border-color:rgba(255,255,255,0.3);background:var(--surface2)}
+.pricing-btn-primary{background:var(--tg);color:#fff;box-shadow:0 0 20px rgba(34,158,217,0.2)}
+.pricing-btn-primary:hover{background:var(--tg2);transform:translateY(-1px)}
+.pricing-features{display:flex;flex-direction:column;gap:0.75rem}
+.pricing-feat{display:flex;align-items:center;gap:10px;font-size:0.875rem;color:var(--text2)}
+.pf-check{color:var(--green);font-size:0.9rem;flex-shrink:0}
+.pf-dash{color:var(--text3);font-size:0.9rem;flex-shrink:0}
+
+/* ── CTA ── */
+.cta-section{
+  padding:8rem 0;text-align:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(34,158,217,0.06) 0%,transparent 70%);
+}
+.cta-section h2{font-size:clamp(2.2rem,4vw,3.5rem);margin-bottom:1.25rem}
+.cta-section p{font-size:1.1rem;color:var(--text2);margin-bottom:3rem;max-width:500px;margin-left:auto;margin-right:auto}
+.cta-actions{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid var(--border);padding:3rem 0 2rem;
+}
+.footer-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:1.5rem;
+}
+.footer-links{display:flex;gap:2rem;flex-wrap:wrap}
+.footer-links a{font-size:0.85rem;color:var(--text3);text-decoration:none;transition:color 0.2s}
+.footer-links a:hover{color:var(--text2)}
+.footer-copy{font-size:0.8rem;color:var(--text3);font-family:var(--mono)}
+
+/* ── ANIMATIONS ── */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity 0.6s ease,transform 0.6s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.stagger-1{transition-delay:0.1s}
+.stagger-2{transition-delay:0.2s}
+.stagger-3{transition-delay:0.3s}
+.stagger-4{transition-delay:0.4s}
+
+/* ── DIVIDER ── */
+.divider{
+  height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);
+  margin:0;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1000px){
+  .hero-content{grid-template-columns:1fr;gap:3rem}
+  .hero-visual{display:none}
+  .how-grid{grid-template-columns:1fr}
+  .tracks-grid{grid-template-columns:1fr}
+  .compliance-grid{grid-template-columns:1fr 1fr}
+  .pricing-grid{grid-template-columns:1fr}
+  .deploy-flow{flex-direction:column}
+  .deploy-step{border-radius:12px !important}
+  .deploy-step::after{display:none}
+  .standards-row{flex-direction:column}
+  .standard-item{border-right:none;border-bottom:1px solid var(--border)}
+  .standard-item:last-child{border-bottom:none}
+}
+@media(max-width:600px){
+  .compliance-grid{grid-template-columns:1fr}
+  .hero-stats{flex-wrap:wrap;gap:1.5rem}
+  .nav-links{display:none}
+  h1{font-size:2.4rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <img src="/logo.svg" alt="MiniGram" style="width:32px;height:32px;border-radius:8px">
+      MiniGram
+    </a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#tracks">Tracks</a>
+      <a href="#compliance">Compliance</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#docs">Docs</a>
+    </div>
+    <a href="/builder" class="nav-cta">
+      Start Building Free
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="glow-orb glow-orb-1"></div>
+  <div class="glow-orb glow-orb-2"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="hero-eyebrow">
+          <span class="eyebrow-dot"></span>
+          Powered by AI · Built for Telegram
+        </div>
+        <h1>
+          Build Telegram<br>
+          <span class="h1-line2">Mini Apps</span><br>
+          in seconds
+        </h1>
+        <p class="hero-sub">
+          Describe your app. MiniGram generates a <strong>complete, production-ready</strong> Telegram Mini App — bot backend, frontend, notifications, TON blockchain — fully compliant with official Telegram and TON standards.
+        </p>
+        <div class="hero-actions">
+          <a href="/builder" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Generate My First App
+          </a>
+          <a href="#how" class="btn-secondary">
+            See how it works
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-num">45s</span>
+            <span class="stat-label">Avg generation</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">22</span>
+            <span class="stat-label">Auto checks</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">100%</span>
+            <span class="stat-label">TON compliant</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">7</span>
+            <span class="stat-label">Files generated</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="float-card float-card-1">
+          <div class="fc-label">Check score</div>
+          <div class="fc-value">22 / 22</div>
+          <div class="fc-sub">✓ All checks passed</div>
+        </div>
+        <div class="terminal">
+          <div class="terminal-bar">
+            <span class="tb-dot tb-red"></span>
+            <span class="tb-dot tb-amber"></span>
+            <span class="tb-dot tb-green"></span>
+            <span class="tb-title">MiniGram — generate</span>
+          </div>
+          <div class="terminal-body">
+            <div><span class="t-prompt">$ </span><span class="t-input">A TON Members Club where users connect their wallet and need 100 CLUB tokens to access the premium feed</span></div>
+            <div class="t-generating">
+              <div class="t-step done"><span class="t-icon">✓</span><span>App name generated — TON Members Club</span></div>
+              <div class="t-step done"><span class="t-icon">✓</span><span>miniapp.html — TON Connect + wallet UI</span></div>
+              <div class="t-step done"><span class="t-icon">✓</span><span>bot.py — TON payment verification</span></div>
+              <div class="t-step done"><span class="t-icon">✓</span><span>tonconnect-manifest.json</span></div>
+              <div class="t-step active"><span class="t-icon">→</span><span>scheduler.py + config files...</span><span class="t-cursor"></span></div>
+            </div>
+            <div class="t-files">
+              <div class="t-files-title">Generated files</div>
+              <div class="t-file"><span class="t-filename">miniapp.html</span><span class="t-filesize">18kb <span class="t-badge badge-pass">✓</span></span></div>
+              <div class="t-file"><span class="t-filename">bot.py</span><span class="t-filesize">12kb <span class="t-badge badge-pass">✓</span></span></div>
+              <div class="t-file"><span class="t-filename">tonconnect-manifest.json</span><span class="t-filesize">0.4kb <span class="t-badge badge-t2">TON</span></span></div>
+              <div class="t-file"><span class="t-filename">scheduler.py</span><span class="t-filesize">6kb <span class="t-badge badge-pass">✓</span></span></div>
+              <div class="t-file"><span class="t-filename">requirements.txt</span><span class="t-filesize">0.2kb</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="float-card float-card-2">
+          <div class="fc-label">Track detected</div>
+          <div class="fc-value" style="color:var(--ton)">Track 2 · TON</div>
+          <div class="fc-sub">Blockchain app</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="section-label">How it works</div>
+    <h2>From prompt to<br>production in three steps</h2>
+    <p class="section-sub">No technical knowledge required. MiniGram handles everything from code generation to deployment, all guided.</p>
+
+    <div class="how-grid fade-up">
+      <div class="how-card">
+        <div class="how-num">01</div>
+        <div class="how-icon how-icon-tg">💬</div>
+        <h3>Describe your app</h3>
+        <p>Type what you want in plain English. MiniGram automatically detects whether you need a standard business app or a TON blockchain integration.</p>
+        <div class="how-connector"></div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">02</div>
+        <div class="how-icon how-icon-ai">⚡</div>
+        <h3>AI generates everything</h3>
+        <p>5 sequential AI calls produce a complete package: Mini App frontend, Python bot backend, notification scheduler, TON Connect integration, and a guided setup guide.</p>
+        <div class="how-connector"></div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">03</div>
+        <div class="how-icon how-icon-dep">🚀</div>
+        <h3>Deploy in 10 minutes</h3>
+        <p>The guided wizard connects your GitHub, Vercel, and Telegram accounts step by step. No terminal. No server configuration. Your bot goes live automatically.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TRACKS -->
+<section id="tracks" class="tracks-section">
+  <div class="container">
+    <div class="section-label">Two tracks</div>
+    <h2>Built for every<br>Telegram builder</h2>
+    <p class="section-sub">MiniGram automatically detects your app type and uses the right generation track — no configuration needed.</p>
+
+    <div class="tracks-grid fade-up">
+      <div class="track-card track-card-t1">
+        <div class="track-badge badge-standard">Track 1 · Standard</div>
+        <h3>Business & Community Apps</h3>
+        <p>Restaurants, event managers, digital stores, communities, productivity tools. Everything a business needs on Telegram — payments via Stars, notifications, referrals, sharing.</p>
+        <div class="track-features">
+          <div class="track-feat">Telegram Stars payments (platform-compliant)</div>
+          <div class="track-feat">APScheduler notification system</div>
+          <div class="track-feat">Referral program with deep links</div>
+          <div class="track-feat">Rich sharing with Open Graph previews</div>
+          <div class="track-feat">Desktop-responsive Mini App UI</div>
+          <div class="track-feat">4 API calls · 6 output files</div>
+        </div>
+        <div class="track-output">
+          <div class="track-output-label">Generated files</div>
+          <div class="file-pills">
+            <span class="file-pill special">miniapp.html</span>
+            <span class="file-pill special">bot.py</span>
+            <span class="file-pill">scheduler.py</span>
+            <span class="file-pill">requirements.txt</span>
+            <span class="file-pill">.env.example</span>
+            <span class="file-pill">SETUP.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="track-card track-card-t2">
+        <div class="track-badge badge-web3">Track 2 · TON Blockchain</div>
+        <h3>Web3 & DeFi Apps</h3>
+        <p>Token-gated communities, DeFi integrations, NFT platforms, governance systems. Full TON Connect v2 integration with on-chain payment verification, testnet support, and complete compliance with Telegram's blockchain guidelines.</p>
+        <div class="track-features">
+          <div class="track-feat">TON Connect v2 — 30+ wallets supported</div>
+          <div class="track-feat">Jetton balance checking and gating</div>
+          <div class="track-feat">On-chain payment verification (TON Center API)</div>
+          <div class="track-feat">NanoTON math and transaction flow UI</div>
+          <div class="track-feat">Testnet + mainnet configuration</div>
+          <div class="track-feat">5 API calls · 7 output files</div>
+        </div>
+        <div class="track-output">
+          <div class="track-output-label">Generated files</div>
+          <div class="file-pills">
+            <span class="file-pill special">miniapp.html</span>
+            <span class="file-pill special">bot.py</span>
+            <span class="file-pill special">tonconnect-manifest.json</span>
+            <span class="file-pill">scheduler.py</span>
+            <span class="file-pill">requirements.txt</span>
+            <span class="file-pill">.env.example</span>
+            <span class="file-pill">SETUP.md</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CODE PREVIEW -->
+<section id="code" class="code-section">
+  <div class="container">
+    <div class="section-label">Generated code</div>
+    <h2>Real code. No templates.<br>No gaps to fill.</h2>
+    <p class="section-sub">Claude writes every line from scratch using your prompt. Every file is complete and immediately runnable — no TODO comments, no placeholder logic.</p>
+
+    <div class="code-tabs fade-up">
+      <button class="code-tab active" onclick="switchTab(0)">miniapp.html</button>
+      <button class="code-tab" onclick="switchTab(1)">bot.py</button>
+      <button class="code-tab" onclick="switchTab(2)">scheduler.py</button>
+    </div>
+
+    <div class="code-window fade-up stagger-1">
+      <div class="code-window-bar">
+        <span class="code-window-lang" id="code-lang">HTML · Telegram WebApp SDK · TON Connect</span>
+        <button class="code-copy" onclick="this.textContent='Copied!'">Copy</button>
+      </div>
+      <div class="code-content" id="code-0">
+<span class="cm">// Track 2 — TON Members Club · miniapp.html</span>
+<span class="cm">// Generated by MiniGram in 7,000 tokens</span>
+
+<span class="kw">&lt;script</span> <span class="fn">src</span><span class="op">=</span><span class="str">"https://telegram.org/js/telegram-web-app.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+<span class="kw">&lt;script</span> <span class="fn">src</span><span class="op">=</span><span class="str">"https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+
+<span class="cm">// Initialise Telegram first, always</span>
+<span class="kw">const</span> <span class="fn">tg</span> <span class="op">=</span> window.Telegram.WebApp;
+tg.ready(); tg.expand();
+document.body.style.backgroundColor <span class="op">=</span> tg.themeParams.bg_color <span class="op">||</span> <span class="str">'#ffffff'</span>;
+
+<span class="cm">// Then TON Connect — synced with Telegram's theme</span>
+<span class="kw">const</span> <span class="fn">tonConnectUI</span> <span class="op">=</span> <span class="kw">new</span> <span class="cls">TON_CONNECT_UI.TonConnectUI</span>({
+  manifestUrl: window.location.origin <span class="op">+</span> <span class="str">'/tonconnect-manifest.json'</span>,
+  buttonRootId: <span class="str">'ton-connect-button'</span>,
+  uiPreferences: { theme: tg.colorScheme <span class="op">===</span> <span class="str">'dark'</span> <span class="op">?</span> <span class="str">'DARK'</span> <span class="op">:</span> <span class="str">'LIGHT'</span> }
+});
+
+<span class="cm">// Wallet status drives all 3 UI states</span>
+tonConnectUI.onStatusChange(<span class="kw">function</span>(wallet) {
+  <span class="kw">if</span> (wallet) {
+    <span class="kw">const</span> short <span class="op">=</span> wallet.account.address.slice(<span class="num">0</span>,<span class="num">6</span>) <span class="op">+</span> <span class="str">'...'</span> <span class="op">+</span>
+                  wallet.account.address.slice(<span class="op">-</span><span class="num">4</span>);
+    <span class="kw">if</span> (wallet.account.chain <span class="op">===</span> <span class="str">'-3'</span>) showTestnetBanner();
+    showWalletConnected(short);
+  } <span class="kw">else</span> {
+    showWalletDisconnected();
+  }
+});</div>
+
+      <div class="code-content code-hidden" id="code-1">
+<span class="cm"># Track 2 — TON Members Club · bot.py</span>
+<span class="cm"># Generated by MiniGram · python-telegram-bot v21+</span>
+
+<span class="kw">import</span> os, json, logging, asyncio
+<span class="kw">import</span> aiohttp
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+<span class="kw">from</span> telegram <span class="kw">import</span> (
+    Update, InlineKeyboardButton, InlineKeyboardMarkup,
+    ReplyKeyboardMarkup, WebAppInfo
+)
+<span class="kw">from</span> telegram.error <span class="kw">import</span> RetryAfter, Forbidden
+
+load_dotenv()
+
+BOT_TOKEN    <span class="op">=</span> os.getenv(<span class="str">"BOT_TOKEN"</span>)      <span class="cm"># never hardcoded</span>
+MINI_APP_URL <span class="op">=</span> os.getenv(<span class="str">"MINI_APP_URL"</span>)
+TESTNET      <span class="op">=</span> os.getenv(<span class="str">"TESTNET"</span>, <span class="str">"true"</span>).lower() <span class="op">==</span> <span class="str">"true"</span>
+
+<span class="kw">def</span> <span class="fn">app_keyboard</span>(text<span class="op">=</span><span class="str">"🚀 Open App"</span>):
+    <span class="cm">"""Every message uses this — no bare text ever."""</span>
+    <span class="kw">return</span> InlineKeyboardMarkup([[
+        InlineKeyboardButton(text, web_app<span class="op">=</span>WebAppInfo(url<span class="op">=</span>MINI_APP_URL))
+    ]])
+
+<span class="kw">async def</span> <span class="fn">start</span>(update, context):
+    user <span class="op">=</span> update.effective_user
+    <span class="cm"># Pin launch message on /start — Standard 5: +5% conversion</span>
+    msg <span class="op">=</span> <span class="kw">await</span> update.message.reply_text(
+        <span class="str">f"👋 Hey {user.first_name}! Welcome to TON Members Club."</span>,
+        reply_markup<span class="op">=</span>app_keyboard()
+    )
+    <span class="kw">await</span> context.bot.pin_chat_message(
+        chat_id<span class="op">=</span>update.effective_chat.id,
+        message_id<span class="op">=</span>msg.message_id,
+        disable_notification<span class="op">=</span><span class="kw">True</span>
+    )</div>
+
+      <div class="code-content code-hidden" id="code-2">
+<span class="cm"># scheduler.py — APScheduler with rate limiting</span>
+<span class="cm"># Standard 6: 1 notification/24hr, 17:00-19:00 UTC</span>
+
+<span class="kw">from</span> apscheduler.schedulers.asyncio <span class="kw">import</span> AsyncIOScheduler
+<span class="kw">from</span> telegram.error <span class="kw">import</span> Forbidden, RetryAfter
+<span class="kw">import</span> asyncio, pytz
+
+last_notified <span class="op">=</span> {}   <span class="cm"># user_id → last timestamp</span>
+inactive_users <span class="op">=</span> set()
+
+<span class="kw">async def</span> <span class="fn">send_daily_notifications</span>():
+    bot   <span class="op">=</span> Bot(token<span class="op">=</span>BOT_TOKEN)
+    users <span class="op">=</span> load_active_users()
+
+    <span class="kw">for</span> i, user <span class="kw">in</span> enumerate(users):
+        <span class="cm"># Rate limit: 25 msg/sec (safe below Telegram's 30/sec)</span>
+        <span class="kw">if</span> i <span class="op">></span> <span class="num">0</span> <span class="kw">and</span> i <span class="op">%</span> <span class="num">25</span> <span class="op">==</span> <span class="num">0</span>: <span class="kw">await</span> asyncio.sleep(<span class="num">1</span>)
+
+        <span class="kw">try</span>:
+            <span class="kw">await</span> bot.send_message(
+                chat_id<span class="op">=</span>user[<span class="str">"id"</span>],
+                <span class="cm"># Always personalised — Standard 6</span>
+                text<span class="op">=</span><span class="str">f"👋 {user['first_name']}, new governance proposal is live!"</span>,
+                reply_markup<span class="op">=</span>app_keyboard()
+            )
+            last_notified[user[<span class="str">"id"</span>]] <span class="op">=</span> datetime.now().timestamp()
+        <span class="kw">except</span> Forbidden:
+            inactive_users.add(user[<span class="str">"id"</span>])    <span class="cm"># user blocked bot</span>
+        <span class="kw">except</span> RetryAfter <span class="kw">as</span> e:
+            <span class="kw">await</span> asyncio.sleep(e.retry_after) <span class="cm"># back off</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- COMPLIANCE -->
+<section id="compliance">
+  <div class="container">
+    <div class="section-label">Standards compliance</div>
+    <h2>Every app follows<br>Telegram's official standards</h2>
+    <p class="section-sub">MiniGram encodes all 8 requirements from the TON Foundation's App Standards Guide directly into every generation. Apps are compliant by default.</p>
+
+    <div class="standards-row fade-up">
+      <div class="standard-item">
+        <div class="std-num">STD 01</div>
+        <h4>Payments</h4>
+        <p>Telegram Stars for digital goods. TON Connect for crypto. Never Stripe.</p>
+      </div>
+      <div class="standard-item">
+        <div class="std-num">STD 02</div>
+        <h4>UI Kit</h4>
+        <p>Telegram theme variables throughout. Native look and feel on all devices.</p>
+      </div>
+      <div class="standard-item">
+        <div class="std-num">STD 03</div>
+        <h4>Desktop</h4>
+        <p>Responsive at 768px breakpoint. Centred at max-width 640px.</p>
+      </div>
+      <div class="standard-item">
+        <div class="std-num">STD 04</div>
+        <h4>Sharing</h4>
+        <p>Inline mode + Open Graph preview. Rich invite cards with deep links.</p>
+      </div>
+      <div class="standard-item">
+        <div class="std-num">STD 05</div>
+        <h4>Conversion</h4>
+        <p>Pinned launch message on /start. Emoji button. Target CR ≥ 10%.</p>
+      </div>
+      <div class="standard-item">
+        <div class="std-num">STD 06</div>
+        <h4>Notifications</h4>
+        <p>1 per user per 24 hours. Personalised. Sent 17–19:00 local time.</p>
+      </div>
+      <div class="standard-item">
+        <div class="std-num">STD 07</div>
+        <h4>Keyboards</h4>
+        <p>Both keyboard types. Every message includes a launch button.</p>
+      </div>
+      <div class="standard-item">
+        <div class="std-num">STD 08</div>
+        <h4>Rate Limits</h4>
+        <p>30 msg/sec global. 20/min per group. RetryAfter handling built in.</p>
+      </div>
+    </div>
+
+    <div class="compliance-grid fade-up" style="margin-top:2rem">
+      <div class="compliance-card">
+        <div class="compliance-num">22 automated checks</div>
+        <h4>Validation on every generation</h4>
+        <p>15 core checks + 7 TON-specific. Every file validated before delivery.</p>
+        <div class="compliance-check">✓ 100% pass rate in testing</div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-num">TON blockchain</div>
+        <h4>Strictly TON only</h4>
+        <p>No Ethereum, MetaMask, or other chains. Platform policy enforced.</p>
+        <div class="compliance-check">✓ Telegram blockchain guidelines</div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-num">Security</div>
+        <h4>initData validation</h4>
+        <p>HMAC-SHA256 signature verification. No hardcoded credentials ever.</p>
+        <div class="compliance-check">✓ Zero hardcoded tokens</div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-num">Production ready</div>
+        <h4>No placeholders</h4>
+        <p>Every file is complete and immediately runnable. No TODO comments.</p>
+        <div class="compliance-check">✓ Tested across 5 app types</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DEPLOYMENT -->
+<section id="deploy">
+  <div class="container">
+    <div class="section-label">Guided deployment</div>
+    <h2>Live in 10 minutes.<br>Zero terminal.</h2>
+    <p class="section-sub">The deployment wizard connects your accounts step by step. Every action that can be automated is automated.</p>
+
+    <div class="deploy-flow fade-up">
+      <div class="deploy-step">
+        <div class="deploy-step-num">Step 1</div>
+        <h4>GitHub</h4>
+        <p>OAuth → repo created, files committed automatically</p>
+        <div class="auto-tag">✓ Automated</div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">Step 2</div>
+        <h4>Vercel</h4>
+        <p>OAuth → Mini App deployed, live URL in ~60 seconds</p>
+        <div class="auto-tag">✓ Automated</div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">Step 3</div>
+        <h4>Telegram</h4>
+        <p>Guided overlay → paste BotFather token → validated instantly</p>
+        <div class="auto-tag">✓ Validated</div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">Step 4*</div>
+        <h4>TON Config</h4>
+        <p>Wallet address + API key → testnet by default</p>
+        <div class="auto-tag">T2 only</div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">Step 5</div>
+        <h4>Go Live 🚀</h4>
+        <p>All env vars injected → bot registered → t.me link ready</p>
+        <div class="auto-tag">✓ Automated</div>
+      </div>
+    </div>
+
+    <p style="text-align:center;font-size:0.85rem;color:var(--text3);margin-top:2rem;font-family:var(--mono)">
+      * For developers: edit any file in the Monaco editor before deploying. Eject to a portable project at any time.
+    </p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-label">Pricing</div>
+    <h2>Start free.<br>Scale when ready.</h2>
+    <p class="section-sub">Every tier includes full TON blockchain support, all 22 validation checks, and complete generated packages.</p>
+
+    <div class="pricing-grid fade-up">
+      <div class="pricing-card">
+        <div class="pricing-tier">Free</div>
+        <div class="pricing-price">$0</div>
+        <p class="pricing-desc">Get started. Build your first apps and see what MiniGram generates.</p>
+        <button class="pricing-btn pricing-btn-outline">Start for free</button>
+        <div class="pricing-features">
+          <div class="pricing-feat"><span class="pf-check">✓</span> 3 generations per month</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> Both Track 1 + Track 2</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> Download all files</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> All 22 validation checks</div>
+          <div class="pricing-feat"><span class="pf-dash">–</span> One-click deploy</div>
+          <div class="pricing-feat"><span class="pf-dash">–</span> Monaco editor</div>
+          <div class="pricing-feat"><span class="pf-dash">–</span> Hosted bot runner</div>
+        </div>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pricing-tier">Pro</div>
+        <div class="pricing-price">$19<span>/month</span></div>
+        <p class="pricing-desc">For builders who ship. Unlimited generations and one-click deployment.</p>
+        <button class="pricing-btn pricing-btn-primary">Get Pro</button>
+        <div class="pricing-features">
+          <div class="pricing-feat"><span class="pf-check">✓</span> Unlimited generations</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> One-click deploy (GitHub + Vercel)</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> Monaco editor + live preview</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> 1 hosted bot runner</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> Custom domain support</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> Project history + eject</div>
+          <div class="pricing-feat"><span class="pf-dash">–</span> Team seats</div>
+        </div>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-tier">Studio</div>
+        <div class="pricing-price">$79<span>/month</span></div>
+        <p class="pricing-desc">For agencies and teams building multiple apps across clients.</p>
+        <button class="pricing-btn pricing-btn-outline">Contact us</button>
+        <div class="pricing-features">
+          <div class="pricing-feat"><span class="pf-check">✓</span> Everything in Pro</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> 5 team seats</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> 10 hosted bot runners</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> White-label output</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> Priority support</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> Dedicated Slack channel</div>
+          <div class="pricing-feat"><span class="pf-check">✓</span> Custom integrations</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <div class="section-label" style="justify-content:center">Get started</div>
+    <h2>Your first Mini App<br>is 45 seconds away</h2>
+    <p>No credit card. No configuration. Just describe what you want to build.</p>
+    <div class="cta-actions">
+      <a href="/builder" class="btn-primary" style="font-size:1.05rem;padding:1rem 2rem">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Build your first app free
+      </a>
+      <a href="#" class="btn-secondary" style="font-size:1.05rem;padding:1rem 1.75rem">
+        Read the docs
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <a href="#" class="logo">
+        <img src="/logo.svg" alt="MiniGram" style="width:32px;height:32px;border-radius:8px">
+        MiniGram
+      </a>
+      <div class="footer-links">
+        <a href="#">Documentation</a>
+        <a href="#">GitHub</a>
+        <a href="#">TON Standards</a>
+        <a href="#">Telegram</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+      <div class="footer-copy">© 2026 MiniGram. Built with love.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Nav scroll effect
+var navbar = document.getElementById('navbar');
+window.addEventListener('scroll', function() {
+  if (window.scrollY > 40) navbar.classList.add('scrolled');
+  else navbar.classList.remove('scrolled');
+});
+
+// Code tabs
+function switchTab(idx) {
+  document.querySelectorAll('.code-tab').forEach(function(t,i){ t.classList.toggle('active', i===idx); });
+  document.querySelectorAll('.code-content').forEach(function(c,i){ c.classList.toggle('code-hidden', i!==idx); });
+  var langs = ['HTML · Telegram WebApp SDK · TON Connect','Python · python-telegram-bot v21+','Python · APScheduler · Rate limiting'];
+  document.getElementById('code-lang').textContent = langs[idx];
+}
+
+// Intersection observer for fade-up
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(function(el){ observer.observe(el); });
+
+// Hero elements enter on load
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelector('.hero-left').style.opacity = '1';
+  setTimeout(function(){ document.querySelector('.hero-visual') && (document.querySelector('.hero-visual').style.opacity = '1'); }, 200);
+});
+</script>
+</body>
+</html>
