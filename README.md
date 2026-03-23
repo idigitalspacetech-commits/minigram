@@ -95,4 +95,4 @@ npm run dev
 
 ---
 
-hello@minigram.net · Built with Claude Sonnet 4 · 2026 MiniGram
+hello@minigram.net · 2026 MiniGram
